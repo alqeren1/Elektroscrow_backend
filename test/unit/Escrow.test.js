@@ -588,69 +588,144 @@ const {
                               assert.equal(buyerDecision.toString(), "0")
                               assert.equal(sellerDecision.toString(), "0")
                           })
+
+                          describe("View functions", async function () {
+                              it("Get balance", async function () {
+                                  await token.transfer(
+                                      escrowLogicAddress,
+                                      amount,
+                                  )
+                                  const _balance =
+                                      await token.balanceOf(escrowLogicAddress)
+                                  //console.log(_balance)
+                                  const balancefunc =
+                                      await escrowLogic.getBalance()
+                                  // console.log(balancefunc)
+                                  assert.equal(_balance, balancefunc)
+                              })
+                              it("Get decisions", async function () {
+                                  const connecting =
+                                      await escrowLogic.connect(seller)
+
+                                  const sellerBalance = await token.balanceOf(
+                                      seller.address,
+                                  )
+
+                                  const buyerBalance =
+                                      await token.balanceOf(buyerAddress)
+                                  await connecting.finishEscrow(0)
+                                  await escrowLogic.finishEscrow(1)
+                                  await escrowLogic.finishEscrow
+                                  const decisions =
+                                      await escrowLogic.getDecisions()
+                                  assert.equal(decisions[0].toString(), "1")
+                                  assert.equal(decisions[1].toString(), "0")
+                              })
+                              it("Get amount", async function () {
+                                  const _amount = await escrowLogic.getAmount()
+                                  assert.equal(_amount, amount)
+                              })
+                              it("Get token contract", async function () {
+                                  const _token =
+                                      await escrowLogic.getTokenContract()
+                                  assert.equal(_token, tokenAddress)
+                              })
+                              it("Get payment status", async function () {
+                                  const payment =
+                                      await escrowLogic.checkPayment(
+                                          buyerAddress,
+                                      )
+                                  const payment2 =
+                                      await escrowLogic.checkPayment(
+                                          seller.address,
+                                      )
+                                  assert.equal(payment, amountBuyer)
+                                  assert.equal(payment2, amount)
+                              })
+                              it("Revert non participant payment status", async function () {
+                                  await expect(
+                                      escrowLogic.checkPayment(
+                                          accounts[3].address,
+                                      ),
+                                  ).to.be.revertedWithCustomError(
+                                      escrowLogic,
+                                      "Logic__NotParticipant",
+                                  )
+                              })
+                              it("Get init state", async function () {
+                                  const bool =
+                                      await escrowLogic.getInitilizeState()
+                                  assert.equal(bool, true)
+                              })
+                              it("Get escrow state", async function () {
+                                  const bool =
+                                      await escrowLogic.getEscrowState()
+                                  assert.equal(bool, false)
+                              })
+                          })
+                      })
+                      describe("RescueERC20 function test", async function () {
+                          beforeEach(async function () {
+                              await token.transfer(escrowLogicAddress, amount)
+                          })
+                          it("Rescues successfully", async function () {
+                              const logicBalance =
+                                  await token.balanceOf(escrowLogicAddress)
+                              //console.log(logicBalance)
+                              const factoryBalance =
+                                  await token.balanceOf(escrowAddress)
+
+                              await escrowLogic.rescueERC20(tokenAddress)
+                              const logicBalance2 =
+                                  await token.balanceOf(escrowLogicAddress)
+
+                              const factoryBalance2 =
+                                  await token.balanceOf(escrowAddress)
+
+                              assert.notEqual(logicBalance, "0")
+                              assert.equal(logicBalance2, "0")
+                              assert.equal(
+                                  factoryBalance + amount,
+                                  factoryBalance2,
+                              )
+                              assert.equal(factoryBalance, "0")
+                          })
                       })
                   })
-                  //-------------------------rescue dan devam--------------------------------------
-                  it("emits event on enter", async function () {
-                      expect(
-                          await raffle.enterRaffle({
-                              value: raffleEntranceFee,
-                          }),
-                      ).to.emit(raffle, "RaffleEnter")
-                  })
-                  it("doesn't accept entrance when raffle is calculating", async function () {
-                      //büyük ihtimalle istek atmak için gerekli olan Lınk token olmadığı için çalışmıyor, sepoliada link ile denemek lazım
-                      await raffle.enterRaffle({ value: raffleEntranceFee })
-                      await network.provider.send("evm_increaseTime", [
-                          Number(interval) + 1,
-                      ])
-                      await network.provider.send("evm_mine")
-                      await raffle.performUpkeep("0x")
+                  //-------------------------view testlerden devam ve gptye neden rescue func da approve gerekmiyor sor--------------------------------------
+              })
+              describe("Recieve and fallback tests", async function () {
+                  it("Recieve test", async function () {
                       await expect(
-                          raffle.enterRaffle({ value: raffleEntranceFee }),
-                      ).to.be.revertedWithCustomError(raffle, "Raffle__NotOpen")
+                          deployer.sendTransaction({
+                              to: escrowLogicAddress,
+                              value: "1000000000000000000",
+                          }),
+                      ).to.be.revertedWithCustomError(
+                          escrowLogic,
+                          "Logic__UseInitialize",
+                      )
+                      const _balance =
+                          await ethers.provider.getBalance(escrowLogicAddress)
+                      assert.equal(_balance, "0")
+                  })
+                  it("Fallback test", async function () {
+                      await expect(
+                          deployer.sendTransaction({
+                              to: escrowLogicAddress,
+                              value: "1000000000000000000",
+                              data: "0x1234",
+                          }),
+                      ).to.be.revertedWithCustomError(
+                          escrowLogic,
+                          "Logic__UseInitialize",
+                      )
+                      const _balance =
+                          await ethers.provider.getBalance(escrowLogicAddress)
+                      assert.equal(_balance, "0")
                   })
               })
           })
 
-          describe("withdraw", async function () {
-              beforeEach(async function () {
-                  await fundMe.fund({ value: sendValue })
-              })
-
-              it("Owner withdraws the money with a single funder", async function () {
-                  //balance = await ethers.provider.getBalance(fundMe)
-
-                  await fundMe.withdraw()
-                  //const owner = await fundMe.i_owner()
-
-                  balance = await ethers.provider.getBalance(fundMe)
-                  //await console.log("Value:" + ethers.formatEther(balance))
-                  assert.equal(balance.toString(), "0")
-              })
-              it("Owner withdraws the money with multiple getFunder", async function () {
-                  const account = await ethers.getSigners()
-
-                  for (i = 1; i < 7; i++) {
-                      const connecting = await fundMe.connect(account[i])
-
-                      await connecting.fund({ value: sendValue })
-                  }
-
-                  const ownerconnect = await fundMe.connect(deployer)
-
-                  await ownerconnect.withdraw()
-                  //balance = await ethers.provider.getBalance(fundMe)
-
-                  //await console.log("Value:" + balance)
-
-                  assert.equal(balance.toString(), "0")
-              })
-              it("Public can't withdraw the money", async function () {
-                  const fundMeConnect = fundMe.connect(alienAccount)
-                  //await fundMeConnect.withdraw()
-                  await expect(fundMeConnect.withdraw()).to.be.reverted
-              })
-          })
           // Add more tests as needed
       })

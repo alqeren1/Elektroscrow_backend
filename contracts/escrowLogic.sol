@@ -99,7 +99,7 @@ contract EscrowLogic {
         }
     }
 
-    function withdraw() external payable onlyParties {
+    function withdraw() external onlyParties {
         if (s_isInitialized == true) {
             revert Logic__NotPossibleAfterInitialize();
         }
@@ -128,7 +128,7 @@ contract EscrowLogic {
     }
 
     // 0 = DECLINE, 1 = ACCEPT, 2 = REFUND
-    function finishEscrow(Decision decision) external payable onlyParties {
+    function finishEscrow(Decision decision) external onlyParties {
         if (s_isInitialized == false) {
             revert Logic__NotInitializedYet();
         }
@@ -197,7 +197,6 @@ contract EscrowLogic {
     function rescueERC20(address tokenAddress) external {
         IERC20 token = IERC20(tokenAddress);
         uint256 amount = token.balanceOf(address(this));
-        //APPROVE GEREKEBILIR TEST ET
         require(token.transfer(i_factory, amount), "Transfer failed");
     }
 
