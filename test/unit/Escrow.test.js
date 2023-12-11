@@ -46,6 +46,26 @@ const {
           })
 
           describe("Initializing escrow contract", function () {
+              it("Zero address test seller", async function () {
+                  await expect(
+                      escrow.escrowFactory(
+                          "0x0000000000000000000000000000000000000000",
+
+                          amount,
+                          tokenAddress,
+                      ),
+                  ).to.be.reverted
+              })
+
+              it("Zero address test token", async function () {
+                  await expect(
+                      escrow.escrowFactory(
+                          seller.address,
+                          amount,
+                          "0x0000000000000000000000000000000000000000",
+                      ),
+                  ).to.be.reverted
+              })
               beforeEach(async function () {
                   const escrowFactoryTx = await escrow.escrowFactory(
                       seller.address,
@@ -491,6 +511,15 @@ const {
                                   buyerBalance2,
                                   buyerBalance + amountBuyer,
                               )
+                          })
+                          it("Bad input scenario", async function () {
+                              const connecting =
+                                  await escrowLogic.connect(seller)
+
+                              await expect(connecting.finishEscrow(3)).to.be
+                                  .reverted
+                              await expect(escrowLogic.finishEscrow(4)).to.be
+                                  .reverted
                           })
                           it("Conflict scenario 1 successfull", async function () {
                               const connecting =

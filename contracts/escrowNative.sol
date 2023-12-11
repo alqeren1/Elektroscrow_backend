@@ -1,11 +1,11 @@
 //SPDX-License-Identifier: MIT
 pragma solidity ^0.8.18;
-import "./escrowLogic.sol";
+import "./escrowLogicNative.sol";
 
 error Factory__NotOwner();
 error Factory_Error();
 
-contract escrow {
+contract escrowNative {
     event EscrowCreated(
         address indexed buyer,
         address indexed seller,
@@ -27,25 +27,16 @@ contract escrow {
         s_owner = msg.sender;
     }
 
-    function escrowFactory(
-        address seller,
-        uint256 amount,
-        address tokenContract
-    ) external {
+    function escrowFactoryNative(address seller, uint256 amount) external {
         address buyer = msg.sender;
-        if (
-            (buyer == address(0)) ||
-            (seller == address(0)) ||
-            (tokenContract == address(0))
-        ) {
-            revert("Zero address");
+        if ((buyer == address(0)) || (seller == address(0))) {
+            revert LogicNative__ZeroAddress();
         }
         require(amount != 0, "Amount zero");
-        EscrowLogic child = new EscrowLogic(
-            buyer,
-            seller,
+        EscrowLogicNative child = new EscrowLogicNative(
+            payable(buyer),
+            payable(seller),
             amount,
-            tokenContract,
             address(this)
         );
         s_buyerToEscrowAddy[buyer].push(address(child));

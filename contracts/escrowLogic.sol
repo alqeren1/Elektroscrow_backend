@@ -1,5 +1,5 @@
 //SPDX-License-Identifier: MIT
-pragma solidity ^0.8.20;
+pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
@@ -9,7 +9,6 @@ error Logic__NotPossibleAfterInitialize();
 error Logic__NotInitializedYet();
 error Logic__EscrowComplete();
 error Logic__UseInitialize();
-error Logic__NotParticipant();
 error Logic__AlreadyDeposited();
 
 contract EscrowLogic {
@@ -52,26 +51,20 @@ contract EscrowLogic {
         i_factory = factory;
     }
 
-    fallback() external payable {
-        revert Logic__UseInitialize();
-    }
-
-    receive() external payable {
-        revert Logic__UseInitialize();
-    }
-
     function initialize() external onlyParties {
-        if (s_isInitialized == true) {
+        if (s_isInitialized) {
             revert Logic__AlreadyInitialized();
         }
         if (
-            ((msg.sender == i_buyer) && (s_buyerDeposited == true)) ||
-            ((msg.sender == i_seller) && (s_sellerDeposited == true))
+            ((msg.sender == i_buyer) && (s_buyerDeposited)) ||
+            ((msg.sender == i_seller) && (s_sellerDeposited))
         ) {
             revert Logic__AlreadyDeposited();
         }
 
         if ((msg.sender == i_buyer)) {
+            s_buyerDeposited = true;
+
             require(
                 i_tokenContract.transferFrom(
                     msg.sender,
@@ -80,9 +73,10 @@ contract EscrowLogic {
                 ),
                 "Transfer failed"
             );
-            s_buyerDeposited = true;
         }
         if ((msg.sender == i_seller)) {
+            s_sellerDeposited = true;
+
             require(
                 i_tokenContract.transferFrom(
                     msg.sender,
@@ -91,19 +85,20 @@ contract EscrowLogic {
                 ),
                 "Transfer failed"
             );
-            s_sellerDeposited = true;
         }
 
-        if ((s_sellerDeposited && s_buyerDeposited) == true) {
+        if ((s_sellerDeposited && s_buyerDeposited)) {
             s_isInitialized = true;
         }
     }
 
     function withdraw() external onlyParties {
-        if (s_isInitialized == true) {
+        if (s_isInitialized) {
             revert Logic__NotPossibleAfterInitialize();
         }
-        if ((msg.sender == i_buyer) && (s_buyerDeposited == true)) {
+        if ((msg.sender == i_buyer) && (s_buyerDeposited)) {
+            s_buyerDeposited = false;
+
             i_tokenContract.approve(address(this), 2 * i_amount);
             require(
                 i_tokenContract.transferFrom(
@@ -114,7 +109,8 @@ contract EscrowLogic {
                 "Transfer failed"
             );
         }
-        if ((msg.sender == i_seller) && (s_sellerDeposited == true)) {
+        if ((msg.sender == i_seller) && (s_sellerDeposited)) {
+            s_sellerDeposited = false;
             i_tokenContract.approve(address(this), i_amount);
             require(
                 i_tokenContract.transferFrom(
@@ -129,10 +125,13 @@ contract EscrowLogic {
 
     // 0 = DECLINE, 1 = ACCEPT, 2 = REFUND
     function finishEscrow(Decision decision) external onlyParties {
-        if (s_isInitialized == false) {
+        if (!s_isInitialized) {
             revert Logic__NotInitializedYet();
         }
-        if (s_escrowComplete == true) {
+        if (s_escrowComplete) {
+            revert Logic__EscrowComplete();
+        }
+        if ((!s_sellerDeposited) || (!s_buyerDeposited)) {
             revert Logic__EscrowComplete();
         }
         if (msg.sender == i_buyer) {
@@ -146,6 +145,9 @@ contract EscrowLogic {
             (s_buyerDecision == Decision.ACCEPT) &&
             (s_sellerDecision == Decision.ACCEPT)
         ) {
+            s_escrowComplete = true;
+            s_sellerDeposited = false;
+            s_buyerDeposited = false;
             i_tokenContract.approve(address(this), 3 * i_amount);
             require(
                 i_tokenContract.transferFrom(
@@ -163,14 +165,14 @@ contract EscrowLogic {
                 ),
                 "Transfer failed"
             );
-            s_escrowComplete = true;
-            s_sellerDeposited = false;
-            s_buyerDeposited = false;
         }
         if (
             (s_buyerDecision == Decision.REFUND) &&
             (s_sellerDecision == Decision.REFUND)
         ) {
+            s_escrowComplete = true;
+            s_sellerDeposited = false;
+            s_buyerDeposited = false;
             i_tokenContract.approve(address(this), 3 * i_amount);
             require(
                 i_tokenContract.transferFrom(
@@ -188,9 +190,6 @@ contract EscrowLogic {
                 ),
                 "Transfer failed"
             );
-            s_escrowComplete = true;
-            s_sellerDeposited = false;
-            s_buyerDeposited = false;
         }
     }
 
@@ -217,13 +216,13 @@ contract EscrowLogic {
     }
 
     function checkPayment(address account) public view returns (uint256) {
-        if ((account == i_seller) && (s_sellerDeposited == true)) {
+        if ((account == i_seller) && (s_sellerDeposited)) {
             return i_amount;
         }
-        if ((account == i_buyer) && (s_buyerDeposited == true)) {
+        if ((account == i_buyer) && (s_buyerDeposited)) {
             return i_amount * 2;
         } else {
-            revert Logic__NotParticipant();
+            return 0;
         }
     }
 
@@ -233,5 +232,13 @@ contract EscrowLogic {
 
     function getEscrowState() public view returns (bool) {
         return s_escrowComplete;
+    }
+
+    fallback() external payable {
+        revert Logic__UseInitialize();
+    }
+
+    receive() external payable {
+        revert Logic__UseInitialize();
     }
 }
