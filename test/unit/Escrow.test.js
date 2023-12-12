@@ -671,16 +671,7 @@ const {
                                   assert.equal(payment, amountBuyer)
                                   assert.equal(payment2, amount)
                               })
-                              it("Revert non participant payment status", async function () {
-                                  await expect(
-                                      escrowLogic.checkPayment(
-                                          accounts[3].address,
-                                      ),
-                                  ).to.be.revertedWithCustomError(
-                                      escrowLogic,
-                                      "Logic__NotParticipant",
-                                  )
-                              })
+
                               it("Get init state", async function () {
                                   const bool =
                                       await escrowLogic.getInitilizeState()

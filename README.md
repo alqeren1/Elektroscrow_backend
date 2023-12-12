@@ -6,6 +6,8 @@ Native ethereum için uyarla diğer .sol u. olmazsa sal, weth kullanılsın.
 
 -escrow native'lerden emin değiliz
 
+-website bitince en son gas efficient yap
+
 
 
 ```shell

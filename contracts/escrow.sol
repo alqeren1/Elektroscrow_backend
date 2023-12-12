@@ -40,6 +40,9 @@ contract escrow {
         ) {
             revert("Zero address");
         }
+        if ((buyer == seller)) {
+            revert("buyer=seller");
+        }
         require(amount != 0, "Amount zero");
         EscrowLogic child = new EscrowLogic(
             buyer,
