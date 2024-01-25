@@ -11,8 +11,13 @@ contract escrow {
         address indexed seller,
         address escrowContract
     );
+    event OwnerUpdate(address owner);
+    event FeeWalletUpdate(address feeWallet);
+    event FeeUpdate(uint256 fee);
 
     address public s_owner;
+    address public s_feeWallet;
+    uint256 public s_fee;
 
     mapping(address => address[]) public s_buyerToEscrowAddy;
     mapping(address => address[]) public s_sellerToEscrowAddy;
@@ -25,6 +30,8 @@ contract escrow {
 
     constructor() {
         s_owner = msg.sender;
+        s_feeWallet = msg.sender;
+        s_fee = 15;
     }
 
     function escrowFactory(
@@ -46,7 +53,9 @@ contract escrow {
             seller,
             amount,
             tokenContract,
-            address(this)
+            address(this),
+            s_fee,
+            s_feeWallet
         );
         s_buyerToEscrowAddy[buyer].push(address(child));
         s_sellerToEscrowAddy[seller].push(address(child));
@@ -56,6 +65,19 @@ contract escrow {
     function updateOwner(address account) external onlyOwner {
         require(account != address(0), "Zero address");
         s_owner = account;
+        emit OwnerUpdate(account);
+    }
+
+    function updateFeeWallet(address account) external onlyOwner {
+        require(account != address(0), "Zero address");
+        s_feeWallet = account;
+        emit FeeWalletUpdate(account);
+    }
+
+    function updateFee(uint256 fee) external onlyOwner {
+        require(fee <= 20, "Err");
+        s_fee = fee;
+        emit FeeUpdate(fee);
     }
 
     function rescueERC20(address tokenAddress) external onlyOwner {

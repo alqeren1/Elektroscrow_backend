@@ -55,3 +55,4 @@ module.exports = {
         token: "ETH",
     },
 }
+//change ETH to BNB or other native tokens to see other chain fees.

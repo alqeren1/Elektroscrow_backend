@@ -17,12 +17,13 @@ contract EscrowLogic {
         ACCEPT,
         REFUND
     }
-
+    address public immutable i_feeWallet;
     address public immutable i_buyer;
     address public immutable i_seller;
     address public immutable i_factory;
     IERC20 public immutable i_tokenContract;
     uint256 public immutable i_amount;
+    uint256 public immutable i_fee;
     bool public s_isInitialized = false;
     bool public s_buyerDeposited = false;
     bool public s_sellerDeposited = false;
@@ -42,13 +43,17 @@ contract EscrowLogic {
         address seller,
         uint256 amount,
         address tokenContract,
-        address factory
+        address factory,
+        uint256 fee,
+        address feeWallet
     ) {
         i_buyer = buyer;
         i_seller = seller;
         i_amount = amount;
         i_tokenContract = IERC20(tokenContract);
         i_factory = factory;
+        i_fee = fee;
+        i_feeWallet = feeWallet;
     }
 
     function initialize() external onlyParties {
@@ -99,7 +104,10 @@ contract EscrowLogic {
         if ((msg.sender == i_buyer) && (s_buyerDeposited)) {
             s_buyerDeposited = false;
 
-            i_tokenContract.approve(address(this), 2 * i_amount);
+            require(
+                i_tokenContract.approve(address(this), 2 * i_amount),
+                "Transfer failed"
+            );
             require(
                 i_tokenContract.transferFrom(
                     address(this),
@@ -111,7 +119,10 @@ contract EscrowLogic {
         }
         if ((msg.sender == i_seller) && (s_sellerDeposited)) {
             s_sellerDeposited = false;
-            i_tokenContract.approve(address(this), i_amount);
+            require(
+                i_tokenContract.approve(address(this), i_amount),
+                "Transfer failed"
+            );
             require(
                 i_tokenContract.transferFrom(
                     address(this),
@@ -145,15 +156,19 @@ contract EscrowLogic {
             (s_buyerDecision == Decision.ACCEPT) &&
             (s_sellerDecision == Decision.ACCEPT)
         ) {
+            uint256 feeAmount = (i_amount * i_fee) / 1000;
             s_escrowComplete = true;
             s_sellerDeposited = false;
             s_buyerDeposited = false;
-            i_tokenContract.approve(address(this), 3 * i_amount);
+            require(
+                i_tokenContract.approve(address(this), 3 * i_amount),
+                "Transfer failed"
+            );
             require(
                 i_tokenContract.transferFrom(
                     address(this),
                     i_buyer,
-                    (i_amount)
+                    (i_amount - (feeAmount / 2))
                 ),
                 "Transfer failed"
             );
@@ -161,7 +176,15 @@ contract EscrowLogic {
                 i_tokenContract.transferFrom(
                     address(this),
                     i_seller,
-                    (2 * i_amount)
+                    ((2 * i_amount) - (feeAmount / 2))
+                ),
+                "Transfer failed"
+            );
+            require(
+                i_tokenContract.transferFrom(
+                    address(this),
+                    i_feeWallet,
+                    (feeAmount)
                 ),
                 "Transfer failed"
             );
@@ -170,15 +193,19 @@ contract EscrowLogic {
             (s_buyerDecision == Decision.REFUND) &&
             (s_sellerDecision == Decision.REFUND)
         ) {
+            uint256 feeAmount = (i_amount * i_fee) / 1000;
             s_escrowComplete = true;
             s_sellerDeposited = false;
             s_buyerDeposited = false;
-            i_tokenContract.approve(address(this), 3 * i_amount);
+            require(
+                i_tokenContract.approve(address(this), 3 * i_amount),
+                "Transfer failed"
+            );
             require(
                 i_tokenContract.transferFrom(
                     address(this),
                     i_buyer,
-                    (2 * i_amount)
+                    ((2 * i_amount) - (feeAmount / 2))
                 ),
                 "Transfer failed"
             );
@@ -186,7 +213,15 @@ contract EscrowLogic {
                 i_tokenContract.transferFrom(
                     address(this),
                     i_seller,
-                    (i_amount)
+                    (i_amount - (feeAmount / 2))
+                ),
+                "Transfer failed"
+            );
+            require(
+                i_tokenContract.transferFrom(
+                    address(this),
+                    i_feeWallet,
+                    (feeAmount)
                 ),
                 "Transfer failed"
             );

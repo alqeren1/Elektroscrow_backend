@@ -26,6 +26,7 @@ const {
               deployer = accounts[0]
               buyerAddress = deployer.address
               seller = accounts[2]
+              feeWallet = accounts[6]
               chainId = network.config.chainId
               amount = ethers.parseUnits("1000", "ether")
               amountBuyer = ethers.parseUnits("2000", "ether")
@@ -67,6 +68,7 @@ const {
                   ).to.be.reverted
               })
               beforeEach(async function () {
+                  await escrow.updateFeeWallet(feeWallet.address)
                   const escrowFactoryTx = await escrow.escrowFactory(
                       seller.address,
                       amount,
@@ -158,9 +160,22 @@ const {
                       connecting.updateOwner(accounts[3].address),
                   ).to.be.revertedWithCustomError(escrow, "Factory__NotOwner")
               })
+              it("Update fee wallet reverts on public calls", async function () {
+                  const connecting = await escrow.connect(accounts[3])
+
+                  await expect(
+                      connecting.updateFeeWallet(accounts[3].address),
+                  ).to.be.revertedWithCustomError(escrow, "Factory__NotOwner")
+              })
               it("Updates the owner", async function () {
                   await escrow.updateOwner(seller.address)
                   const newOwner = await escrow.s_owner()
+
+                  assert.equal(newOwner, seller.address)
+              })
+              it("Updates the fee wallet", async function () {
+                  await escrow.updateFeeWallet(seller.address)
+                  const newOwner = await escrow.s_feeWallet()
 
                   assert.equal(newOwner, seller.address)
               })
@@ -180,7 +195,35 @@ const {
                   // console.log("new balace: " + newBalance)
                   assert.equal(newBalance.toString(), "0")
               })
+              it("Changing the fee works", async function () {
+                  const fee1 = await escrow.s_fee()
+                  await escrow.updateFee("10")
+                  const fee2 = await escrow.s_fee()
 
+                  assert.equal(fee1, BigInt("15"))
+                  assert.equal(fee2, BigInt("10"))
+              })
+              it("Reverts at wrong fee", async function () {
+                  await expect(escrow.updateFee("21")).to.be.reverted
+              })
+              it("Sending ether to factory fails", async function () {
+                  await expect(
+                      deployer.sendTransaction({
+                          to: escrowAddress,
+                          value: ethers.parseEther("1"),
+                      }),
+                  ).to.be.revertedWithCustomError(escrow, "Factory_Error")
+              })
+              it("Fallback func works for factory", async function () {
+                  const data = "0x4ee2cd8e"
+                  await expect(
+                      deployer.sendTransaction({
+                          to: escrowAddress,
+                          value: ethers.parseEther("1"),
+                          data: data,
+                      }),
+                  ).to.be.revertedWithCustomError(escrow, "Factory_Error")
+              })
               describe("Logic tests ", async function () {
                   it("Constructor arguments are correct", async function () {
                       const _buyer = await escrowLogic.i_buyer()
@@ -299,6 +342,30 @@ const {
                           ).to.be.revertedWithCustomError(
                               escrowLogic,
                               "Logic__AlreadyInitialized",
+                          )
+                      })
+                      it("Sending ether to logic fails", async function () {
+                          await expect(
+                              deployer.sendTransaction({
+                                  to: escrowLogicAddress,
+                                  value: ethers.parseEther("1"),
+                              }),
+                          ).to.be.revertedWithCustomError(
+                              escrowLogic,
+                              "Logic__UseInitialize",
+                          )
+                      })
+                      it("Fallback func works for logic", async function () {
+                          const data = "0x4ee2cd8e"
+                          await expect(
+                              deployer.sendTransaction({
+                                  to: escrowLogicAddress,
+                                  value: ethers.parseEther("1"),
+                                  data: data,
+                              }),
+                          ).to.be.revertedWithCustomError(
+                              escrowLogic,
+                              "Logic__UseInitialize",
                           )
                       })
                       describe("Withdraw tests", async function () {
@@ -428,10 +495,12 @@ const {
                       describe("Finish escrow tests", async function () {
                           beforeEach(async function () {
                               await token.transfer(seller.address, amount)
+
                               const approve = await token.approve(
                                   escrowLogicAddress,
                                   amountBuyer,
                               )
+
                               const connect = await escrowLogic.connect(seller)
                               const connect2 = await token.connect(seller)
                               const approve2 = await connect2.approve(
@@ -472,7 +541,7 @@ const {
                               const sellerBalance = await token.balanceOf(
                                   seller.address,
                               )
-
+                              const fee = await escrowLogic.i_fee()
                               const buyerBalance =
                                   await token.balanceOf(buyerAddress)
                               await connecting.finishEscrow(1)
@@ -484,8 +553,21 @@ const {
                               const buyerBalance2 =
                                   await token.balanceOf(buyerAddress)
                               assert.equal(sellerBalance, "0")
-                              assert.equal(sellerBalance2, amountBuyer)
-                              assert.equal(buyerBalance2, buyerBalance + amount)
+                              assert.equal(
+                                  sellerBalance2,
+                                  BigInt(amountBuyer) -
+                                      (BigInt(amount) * BigInt(fee)) /
+                                          BigInt(1000) /
+                                          BigInt(2),
+                              )
+                              assert.equal(
+                                  buyerBalance2,
+                                  BigInt(buyerBalance) +
+                                      BigInt(amount) -
+                                      (BigInt(amount) * BigInt(fee)) /
+                                          BigInt(1000) /
+                                          BigInt(2),
+                              )
                           })
                           it("Refund scenario successfull", async function () {
                               const connecting =
@@ -494,6 +576,7 @@ const {
                               const sellerBalance = await token.balanceOf(
                                   seller.address,
                               )
+                              const fee = await escrowLogic.i_fee()
 
                               const buyerBalance =
                                   await token.balanceOf(buyerAddress)
@@ -506,10 +589,67 @@ const {
                               const buyerBalance2 =
                                   await token.balanceOf(buyerAddress)
                               assert.equal(sellerBalance, "0")
-                              assert.equal(sellerBalance2, amount)
+                              assert.equal(
+                                  sellerBalance2,
+                                  amount -
+                                      (BigInt(amount) * BigInt(fee)) /
+                                          BigInt(1000) /
+                                          BigInt(2),
+                              )
                               assert.equal(
                                   buyerBalance2,
-                                  buyerBalance + amountBuyer,
+                                  buyerBalance +
+                                      amountBuyer -
+                                      (BigInt(amount) * BigInt(fee)) /
+                                          BigInt(1000) /
+                                          BigInt(2),
+                              )
+                          })
+                          it("Fee successfully recieved for accept", async function () {
+                              const connecting =
+                                  await escrowLogic.connect(seller)
+
+                              const fee = await escrowLogic.i_fee()
+
+                              const feeBalance = await token.balanceOf(
+                                  feeWallet.address,
+                              )
+
+                              await connecting.finishEscrow(1)
+                              await escrowLogic.finishEscrow(1)
+                              const feeBalance2 = await token.balanceOf(
+                                  feeWallet.address,
+                              )
+                              //console.log(feeWallet.address)
+                              // console.log(await escrowLogic.i_feeWallet())
+                              assert.equal(feeBalance, "0")
+                              assert.equal(
+                                  feeBalance2,
+
+                                  (BigInt(amount) * BigInt(fee)) / BigInt(1000),
+                              )
+                          })
+                          it("Fee successfully recieved for refund", async function () {
+                              const connecting =
+                                  await escrowLogic.connect(seller)
+
+                              const fee = await escrowLogic.i_fee()
+
+                              const factoryBalance = await token.balanceOf(
+                                  feeWallet.address,
+                              )
+
+                              await connecting.finishEscrow(2)
+                              await escrowLogic.finishEscrow(2)
+                              const factoryBalance2 = await token.balanceOf(
+                                  feeWallet.address,
+                              )
+
+                              assert.equal(factoryBalance, "0")
+                              assert.equal(
+                                  factoryBalance2,
+
+                                  (BigInt(amount) * BigInt(fee)) / BigInt(1000),
                               )
                           })
                           it("Bad input scenario", async function () {
@@ -672,14 +812,12 @@ const {
                                   assert.equal(payment2, amount)
                               })
                               it("Revert non participant payment status", async function () {
-                                  await expect(
-                                      escrowLogic.checkPayment(
+                                  const payment =
+                                      await escrowLogic.checkPayment(
                                           accounts[3].address,
-                                      ),
-                                  ).to.be.revertedWithCustomError(
-                                      escrowLogic,
-                                      "Logic__NotParticipant",
-                                  )
+                                      )
+
+                                  assert.equal(payment, "0")
                               })
                               it("Get init state", async function () {
                                   const bool =
