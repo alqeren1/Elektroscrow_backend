@@ -8,6 +8,8 @@ Native ethereum için uyarla diğer .sol u. olmazsa sal, weth kullanılsın.
 
 -website bitince en son gas efficient yap
 
+-escrow bitince end block'u kaydedebilir
+
 
 
 ```shell
