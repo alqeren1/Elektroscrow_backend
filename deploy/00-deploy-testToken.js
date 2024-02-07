@@ -21,6 +21,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         args: args, //price feed address,
         log: true,
         waitConfirmations: network.config.blockConfirmations,
+        //gasPrice: ethers.parseUnits("5", "gwei"),
     })
     token = await deployments.get("testToken")
     tokenAddress = await token.address
@@ -28,7 +29,11 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     token = await Token.attach(tokenAddress)
 
     connect = await token.connect(accounts[0])
-    await connect.transfer(accounts[1].address, "3000000000000000000000")
+    await connect.transfer(accounts[1].address, "1000000000000000000000")
+    /*await connect.transfer(
+        "0xd3aA0A9100ef0e7125c7F91B5cbAd96d949EFFD0",
+        "1000000000000000000000",
+    )*/
 }
 
-module.exports.tags = ["all", "escrow", "token"]
+module.exports.tags = ["all", "escrow", "token", "token1"]

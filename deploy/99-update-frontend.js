@@ -50,4 +50,4 @@ async function updateFactoryAddress() {
     fs.writeFileSync(FRONTEND_ADDRESSES_FILE, JSON.stringify(currentAddresses))
 }
 
-module.exports.tags = ["all", "frontend"]
+module.exports.tags = ["all", "frontend", "escrowfactory"]

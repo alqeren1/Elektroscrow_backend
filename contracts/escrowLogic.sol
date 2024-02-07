@@ -1,4 +1,7 @@
-//SPDX-License-Identifier: MIT
+// Elektroscrow v1.0
+// Utterly decentralized escrow transactions
+
+// SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity ^0.8.18;
 
 import "@openzeppelin/contracts/token/ERC20/IERC20.sol";

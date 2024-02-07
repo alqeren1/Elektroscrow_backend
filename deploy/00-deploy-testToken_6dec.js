@@ -16,15 +16,15 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
     const chainId = network.config.chainId
     console.log("Chainid:---------------" + chainId)
     const args = ["testToken_6dec", "TT6"]
-    const testToken = await deploy("testToken_6dec", {
+    const testToken = await deploy("testToken6dec", {
         from: deployer,
         args: args, //price feed address,
         log: true,
         waitConfirmations: network.config.blockConfirmations,
     })
-    token = await deployments.get("testToken_6dec")
+    token = await deployments.get("testToken6dec")
     tokenAddress = await token.address
-    const Token = await ethers.getContractFactory("testToken_6dec")
+    const Token = await ethers.getContractFactory("testToken6dec")
     token = await Token.attach(tokenAddress)
 
     connect = await token.connect(accounts[0])
