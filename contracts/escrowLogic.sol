@@ -137,7 +137,6 @@ contract EscrowLogic {
         }
     }
 
-    // 0 = DECLINE, 1 = ACCEPT, 2 = REFUND
     function finishEscrow(Decision decision) external onlyParties {
         if (!s_isInitialized) {
             revert Logic__NotInitializedYet();
@@ -232,6 +231,7 @@ contract EscrowLogic {
     }
 
     function rescueERC20(address tokenAddress) external {
+        require(s_escrowComplete, "Escrow ongoing");
         IERC20 token = IERC20(tokenAddress);
         uint256 amount = token.balanceOf(address(this));
         require(token.transfer(i_factory, amount), "Transfer failed");

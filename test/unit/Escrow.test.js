@@ -534,6 +534,20 @@ const {
                                   "Logic__EscrowComplete",
                               )
                           })
+                          it("Dev can't get funds before escrow finishes", async function () {
+                              const balance_factory =
+                                  await token.balanceOf(escrowAddress)
+
+                              await expect(
+                                  escrowLogic.rescueERC20(tokenAddress),
+                              ).to.be.reverted
+                              const balance_factory2 =
+                                  await token.balanceOf(escrowAddress)
+                              console.log(
+                                  balance_factory + " " + balance_factory,
+                              )
+                              assert.equal(balance_factory, balance_factory2)
+                          })
                           it("Accept scenario successfull", async function () {
                               const connecting =
                                   await escrowLogic.connect(seller)
@@ -833,29 +847,19 @@ const {
                       })
                       describe("RescueERC20 function test", async function () {
                           beforeEach(async function () {
-                              await token.transfer(escrowLogicAddress, amount)
+                              await token.transfer(escrowAddress, amount)
                           })
                           it("Rescues successfully", async function () {
-                              const logicBalance =
-                                  await token.balanceOf(escrowLogicAddress)
-                              //console.log(logicBalance)
                               const factoryBalance =
                                   await token.balanceOf(escrowAddress)
 
-                              await escrowLogic.rescueERC20(tokenAddress)
-                              const logicBalance2 =
-                                  await token.balanceOf(escrowLogicAddress)
+                              await escrow.rescueERC20(tokenAddress)
 
                               const factoryBalance2 =
                                   await token.balanceOf(escrowAddress)
 
-                              assert.notEqual(logicBalance, "0")
-                              assert.equal(logicBalance2, "0")
-                              assert.equal(
-                                  factoryBalance + amount,
-                                  factoryBalance2,
-                              )
-                              assert.equal(factoryBalance, "0")
+                              assert.notEqual(factoryBalance, "0")
+                              assert.equal(factoryBalance2, "0")
                           })
                       })
                   })

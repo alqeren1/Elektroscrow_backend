@@ -186,7 +186,7 @@ module.exports = {
         noColors: true,
         currency: "USD",
         coinmarketcap: process.env.CMC_API,
-        token: "ETH",
+        token: "BNB",
     },
 }
 //change ETH to BNB or other native tokens to see other chain fees.
