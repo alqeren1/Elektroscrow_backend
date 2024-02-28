@@ -148,20 +148,42 @@ module.exports = {
             arbitrumTest: process.env.ARBITRUM_API,
             avaxTest: process.env.AVAX_API,
             avax: "avax",
-            opTest: "optest",
+            celoTest: process.env.CELO_API,
+            opTest: process.env.OP_API,
+            baseTest: process.env.BASE_API,
         },
         customChains: [
             {
                 network: "arbitrumTest",
                 chainId: 421614,
                 urls: {
-                    apiURL: "https://api.arbiscan.io",
+                    apiURL: "https://api-sepolia.arbiscan.io/api",
                     browserURL: "https://sepolia.arbiscan.io/",
                 },
             },
             {
                 network: "opTest",
                 chainId: 11155420,
+                urls: {
+                    apiURL: "https://api-sepolia-optimistic.etherscan.io/api",
+                    browserURL: "https://sepolia-optimism.etherscan.io/",
+                },
+            },
+            {
+                network: "baseTest",
+                chainId: 84532,
+                urls: {
+                    apiURL: "https://api-sepolia.basescan.org/api",
+                    browserURL: "https://sepolia.basescan.org/",
+                },
+            },
+            {
+                network: "celoTest",
+                chainId: 44787,
+                urls: {
+                    apiURL: "https://api-alfajores.celoscan.io/api",
+                    browserURL: "https://alfajores.celoscan.io/",
+                },
             },
             {
                 network: "avax",
@@ -186,7 +208,8 @@ module.exports = {
         noColors: true,
         currency: "USD",
         coinmarketcap: process.env.CMC_API,
-        token: "BNB",
+        token: "ETH",
+        //gasPrice: 3,
     },
 }
 //change ETH to BNB or other native tokens to see other chain fees.

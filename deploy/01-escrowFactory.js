@@ -16,7 +16,7 @@ module.exports = async ({ getNamedAccounts, deployments }) => {
         args: [], //price feed address,
         log: true,
         waitConfirmations: network.config.blockConfirmations,
-        gasPrice: ethers.parseUnits("65", "gwei"),
+        //gasPrice: ethers.parseUnits("28", "gwei"),
     })
     if (chainId == 31337) {
         const escrowDeployed = await ethers.getContract("escrow", deployer)
