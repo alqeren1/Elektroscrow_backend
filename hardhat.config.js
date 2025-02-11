@@ -40,6 +40,30 @@ module.exports = {
             chainId: 43114,
             blockConfirmations: 6,
         },
+        op: {
+            url: process.env.OP_RPC_URL,
+            accounts: [process.env.PRIVATE_KEY],
+            chainId: 10,
+            blockConfirmations: 6,
+        },
+        arb: {
+            url: process.env.ARB_RPC_URL,
+            accounts: [process.env.PRIVATE_KEY],
+            chainId: 42161,
+            blockConfirmations: 6,
+        },
+        base: {
+            url: process.env.BASE_RPC_URL,
+            accounts: [process.env.PRIVATE_KEY],
+            chainId: 8453,
+            blockConfirmations: 6,
+        },
+        celo: {
+            url: process.env.CELO_RPC_URL,
+            accounts: [process.env.PRIVATE_KEY],
+            chainId: 42220,
+            blockConfirmations: 6,
+        },
         sepolia: {
             url: process.env.SEPOLIA_RPC_URL,
             accounts: [process.env.PRIVATE_KEY],
@@ -145,12 +169,16 @@ module.exports = {
             bscTestnet: process.env.BSCSCAN_API,
             polygon: process.env.POLYGON_API,
             polygonMumbai: process.env.POLYGON_API,
+            ARB: process.env.ARBITRUM_API,
             arbitrumTest: process.env.ARBITRUM_API,
             avaxTest: process.env.AVAX_API,
             avax: "avax",
             celoTest: process.env.CELO_API,
             opTest: process.env.OP_API,
             baseTest: process.env.BASE_API,
+            OP: process.env.OP_API,
+            base: process.env.BASE_API,
+            celo: process.env.CELO_API,
         },
         customChains: [
             {
@@ -170,11 +198,43 @@ module.exports = {
                 },
             },
             {
+                network: "OP",
+                chainId: 10,
+                urls: {
+                    apiURL: "https://api-optimistic.etherscan.io/api",
+                    browserURL: "https://optimistic.etherscan.io/",
+                },
+            },
+            {
+                network: "ARB",
+                chainId: 42161,
+                urls: {
+                    apiURL: "https://api.arbiscan.io/api",
+                    browserURL: "https://arbiscan.io/",
+                },
+            },
+            {
+                network: "base",
+                chainId: 8453,
+                urls: {
+                    apiURL: "https://api.basescan.org/api",
+                    browserURL: "https://basescan.org/",
+                },
+            },
+            {
                 network: "baseTest",
                 chainId: 84532,
                 urls: {
                     apiURL: "https://api-sepolia.basescan.org/api",
                     browserURL: "https://sepolia.basescan.org/",
+                },
+            },
+            {
+                network: "celo",
+                chainId: 42220,
+                urls: {
+                    apiURL: "https://api.celoscan.io/api",
+                    browserURL: "https://celoscan.io/",
                 },
             },
             {
@@ -209,7 +269,7 @@ module.exports = {
         currency: "USD",
         coinmarketcap: process.env.CMC_API,
         token: "ETH",
-        //gasPrice: 3,
+        gasPrice: 1,
     },
 }
 //change ETH to BNB or other native tokens to see other chain fees.

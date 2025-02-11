@@ -4,7 +4,7 @@ const {
     networkConfig,
     developmentChains,
 } = require("../../helper-hardhat-config")
-//sadece local chain testi
+//only local chain tests
 !developmentChains.includes(network.name)
     ? describe.skip
     : describe("Escrow unit tests", function () {
@@ -863,7 +863,6 @@ const {
                           })
                       })
                   })
-                  //-------------------------view testlerden devam ve gptye neden rescue func da approve gerekmiyor sor--------------------------------------
               })
               describe("Recieve and fallback tests", async function () {
                   it("Recieve test", async function () {

@@ -9,5 +9,6 @@ gas-report.txt
 # Hardhat files
 cache
 artifacts
+tempcontr
 
 .env

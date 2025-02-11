@@ -1,6 +1,6 @@
 {
-  "name": "hardhat_lottery",
-  "author": "babajones",
+  "name": "elektroscrow_v1",
+  "author": "elektroscrow_dev",
   "devDependencies": {
     "@chainlink/contracts": "^0.8.0",
     "@nomicfoundation/hardhat-chai-matchers": "^2.0.2",
