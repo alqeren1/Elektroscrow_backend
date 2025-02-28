@@ -1,4 +1,4 @@
-# Elektroscrow Smart Contract
+# Elektroscrow Smart Contracts
 
 ![Elektroscrow Banner](assets/banner.png)
 
