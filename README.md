@@ -9,6 +9,14 @@ Elektroscrow is the first fully decentralized escrow service built to operate ac
 
 Elektroscrow eliminates reliance on centralized intermediaries by leveraging immutable, self-executing smart contracts. It provides secure, trustless, and private escrow transactions where funds are only released when both parties reach a consensus.
 
+## Project's Development
+
+This project is a solo effort developed by [@alqeren1](https://github.com/alqeren1).
+
+## Social Links
+- Decentralized Application: [elektroscrow.com](https://elektroscrow.com)
+- X (Twitter): [x.com/elektroscrow](https://x.com/elektroscrow)
+
 ---
 
 ## Table of Contents
@@ -27,7 +35,6 @@ Elektroscrow eliminates reliance on centralized intermediaries by leveraging imm
   - [Deployment](#deployment)
 - [Deployment & Testing Commands](#deployment--testing-commands)
 - [Audit and KYC](#audit-and-kyc)
-- [Social Links](#social-links)
 - [License](#license)
 - [Contact](#contact)
 
@@ -194,9 +201,7 @@ npx hardhat deploy --tags <tag-name> --network <network-name>
 Elektroscrow's smart contracts have been audited and the development team is KYC verified by **SolidProof**. This enhances project credibility and assures users of the security and integrity of the platform. Detailed audit reports can be found via the provided [SolidProof](https://x.com/SolidProof_io/status/1763958258165764441) tweet.
 
 
-## Social Links
-- Website: [elektroscrow.com](https://elektroscrow.com)
-- X (Twitter): [x.com/elektroscrow](https://x.com/elektroscrow)
+
   
 
 ## License
@@ -204,7 +209,8 @@ This project is licensed under the MIT License.
 
 
 ## Contact
-For questions, support, or further information, please open an issue in the repository or contact the maintainers directly.
+
+For any inquiries or further information, please reach out at [alqeren1@gmail.com](mailto:alqeren1@gmail.com).
 
 
 ## Disclaimer
